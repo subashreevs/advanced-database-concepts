@@ -1,0 +1,557 @@
+\documentclass[11pt]{article}
+\usepackage{enumitem}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{color}
+
+\newcommand{\red}[1]{{\color{red}#1}}
+\newcommand{\green}[1]{{\color{green}#1}}
+\newcommand{\blue}[1]{{\color{blue}#1}}
+\newcommand{\SFW}[3]{{\color{blue}}}
+
+\newcommand{\redbullet}{$\red{\bullet}$}
+\newcommand{\bluebullet}{$\blue{\bullet}$}
+
+\newtheorem{example}{Example}
+
+\begin{document}
+
+\title{B561 Advanced Database Concepts \\Assignment 2 \\Fall 2024}
+\author{Chenghong Wang}
+\date{}
+\maketitle
+
+This {assignment} relies on the lectures
+\begin{itemize}
+\item SQL Part 1 and SQL Part 2 (Pure SQL);
+\item Views;
+\item Relational Algebra (RA);  and 
+\item Joins and semijoins. 
+\end{itemize}
+
+Furthermore, the lecture on the correspondence between Tuple Relational Calculus and SQL should help you to solve problems in this assignment.
+
+To turn in your assignment, you will need to upload to Canvas a file with name {\tt assignment2.sql} which contains 
+the necessary SQL statements that solve the problems in this assignment.   
+The {\tt assignment2.sql} file must be so that the AI's can run it in their PostgreSQL environment.  
+You should use the {\tt Assignment2Script.sql} file to construct the {\tt assignment2.sql} file. (Note that the data to be used for this assignment is included in this file.)
+In addition, you will need to upload a separate {\tt assignment2.txt} file that contains the results of running
+your queries.
+Finally, you need to upload a file {\tt assignment2.pdf} that contains the solutions to the problems that require it.
+In short, 3 files {\tt assignment2.sql}, {\tt assignment2.txt}, and {\tt assignment2.pdf} should be submitted in canvas.
+
+
+The problems that need to be included in the {\tt assignment2.sql} are marked with a blue bullet \bluebullet.
+The problems that need to be included in the {\tt assignment2.pdf} are marked with a red bullet \redbullet.
+(You should aim to use Latex to construct your .pdf file.)
+
+\newpage
+\noindent
+\large{\bf Database schema and instances}
+\bigskip
+
+
+
+
+For the problems in this assignment we will use the following database schema:\footnote{The primary key, which may consist of one or more attributes, of each of these relations is underlined.}
+
+\begin{center}
+{\tt
+  \begin{tabular}{l}
+  {Student}($\underline{\tt sid}$, sname, city) \\
+  {Company}($\underline{\tt cname}, {\tt headquarter}$) \\
+  {Skill}($\underline{\tt skill}$) \\
+  {worksFor}($\underline{\tt sid}$, cname, salary) \\
+  {companyLocation}($\underline{\tt cname, city}$) \\
+  {studentSkill}($\underline{\tt sid, skill}$) \\
+  {hasManager}($\underline{\tt eid, mid}$) \\
+  {Knows}($\underline{\tt sid1, sid2}$) \\
+   \end{tabular}
+  }
+\end{center}
+
+In this database we maintain a set of students ({\tt Student}), a set
+of companies ({\tt Company}), and a set of (job) skills ({\tt Skill}).  
+The {\tt sname} attribute in {\tt Student} is the name of the student.  
+The {\tt city} attribute in {\tt Student} specifies the city in which the student lives.  
+The {\tt cname} attribute in {\tt Company} is the name of the company.
+The {\tt headquarter} attribute in {\tt Company} is the name of the city wherein the company has its headquarter.
+The {\tt skill} attribute in {\tt Skill} is the name of a (job) skill.
+
+A student can work for at most one company. This information is maintained in the {\tt worksFor} relation. (We permit that a student does not work for any company.)
+The {\tt salary} attribute in {\tt worksFor} specifies the salary made by the student.
+
+The {\tt city} attribute in {\tt companyLocation} indicates a city in which the company is located.
+(Companies may be located in multiple cities.)
+
+A student can have multiple job skills. This information is maintained in the {\tt studentSkill} relation.  A job skill can be
+the job skill of multiple students.  (A student may not have any job skills, and a job skill may
+have no students with that skill.)
+
+A pair $(e,m)$ in {\tt hasManager} indicates that student $e$ has  
+student $m$ as one of his or her managers.
+We permit that an employee has multiple managers and that a manager  may manage
+multiple employees.  (It is possible that an employee has no manager
+and that an employee is not a manager.)
+We further require that 
+an employee and his or her managers must work for the
+same company.
+
+The relation {\tt Knows} maintains a set of pairs $(s_1,s_2)$ where $s_1$ 
+and $s_2$ are sids of students.   The pair $(s_1,s_2)$ indicates that the student with
+sid $s_1$ knows the student with sid $s_2$.
+We do not assume that the relation {\tt Knows} is
+symmetric: it is possible that $(s_1,s_2)$ is in the relation but that
+$(s_2,s_1)$ is not.
+
+The domain for the attributes {\tt sid}, {\tt sid1}, {\tt sid2}, {\tt salary}, {\tt eid}, and {\tt mid} is {\tt integer}.   The domain for all other attributes is {\tt text}.
+
+We assume the following foreign key constraints:
+\begin{itemize}
+\item {\tt sid} is a foreign key in {\tt worksFor} referencing the primary key {\tt sid} in {\tt Student};
+\item {\tt cname} is a foreign key in {\tt worksFor} referencing the primary key {\tt cname} in {\tt Company};
+\item {\tt cname} is a foreign key in {\tt companyLocation} referencing the primary key {\tt cname} in {\tt Company};
+\item {\tt sid} is a foreign key in {\tt StudentSkill} referencing the primary key {\tt sid} in {\tt Student};
+\item {\tt skill} is a foreign key in {\tt StudentSkill} referencing the primary key {\tt skill} in {\tt Skill};
+\item {\tt eid} is a foreign key in {\tt hasManager} referencing the primary key {\tt sid} in {\tt Student}; 
+\item {\tt mid} is a foreign key in {\tt hasManager} referencing the primary key {\tt sid} in {\tt Student};
+\item {\tt sid1} is a foreign key in {\tt Knows} referencing the primary key {\tt sid} in {\tt Student}; and
+\item {\tt sid2} is a foreign key in {\tt Knows} referencing the primary key {\tt sid} in {\tt Student}
+\end{itemize}
+
+The file {\tt Assignment2Script.sql} contains the data supplied for this assignment.
+\newpage
+
+\noindent
+\large{\bf Pure SQL and RA SQL}
+
+\bigskip
+In this assignemt, we distinguish between Pure SQL and RA SQL.
+Below we list the {\bf only} features that are allowed in Pure SQL and in RA SQL. 
+
+In particular notice that 
+\begin{itemize}
+\item {\tt JOIN}, {\tt NATURAL~JOIN}, and {\tt CROSS~JOIN} are {\bf not} allowed in Pure SQL.
+\item The predicates  [{\tt NOT}]~{\tt IN}, {\tt SOME}, {\tt ALL}, [{\tt NOT}]~{\tt EXISTS} are {\bf not} allowed in RA SQL.
+\end{itemize}
+
+\begin{center}
+\begin{tabular}{c}
+{\bf The only features allowed in Pure SQL} \\ \hline
+\begin{tabular}{l}
+{\tt SELECT ... FROM ... WHERE}\\
+{\tt WITH ...} \\
+{\tt UNION, INTERSECT, EXCEPT} operations \\
+{\tt EXISTS} and {\tt NOT EXISTS} predicates \\
+{\tt IN} and {\tt NOT IN} predicates \\
+{\tt ALL} and {\tt SOME} predicates \\
+{\tt VIEW}s that can only use the above RA SQL features
+\end{tabular} \\
+ \\
+{\bf The only features allowed in RA SQL} \\ \hline 
+\begin{tabular}{l}
+{\tt SELECT ... FROM ... WHERE}\\
+{\tt WITH ...} \\
+{\tt UNION, INTERSECT, EXCEPT} operations\\
+{\tt JOIN ... ON ...}, {\tt NATURAL JOIN}, and {\tt CROSS JOIN} operations \\
+{\tt VIEW}s that can only use the above RA SQL features\\ 
+commas in the {\tt FROM} clause are {\bf not} allowed \\
+\end{tabular} \\
+\end{tabular}
+\end{center}
+
+\newpage
+
+\section{Formulating queries in Pure SQL with and without set predicates}
+\label{PureSQL}
+
+An important consideration in formulating queries is to contemplate how they can be written in different, but equivalent, ways. 
+In fact, this is an aspect of programming in general and, as can expected, is also true for SQL.   A learning outcome of this course
+is to acquire skills for writing queries in different ways.    One of the main motivations for this is to learn 
+that different formulations of the same query can 
+dramatically impact performance, sometimes by orders of magnitude.    
+
+
+For the problems in this section, you will need to formulate queries in {Pure SQL} with and without set predicates.
+You can use the SQL operators {\tt INTERSECT}, {\tt UNION}, and {\tt EXCEPT}, unless otherwise specified.
+You are however allowed and  encouraged to use views including temporary and user-defined views.
+
+To illustrate what you need to do, consider the following example.
+\begin{example}\label{PureSQLquery}
+Consider the query ``\emph{Find the sid and name of each Student who (a)
+works for a company located in Bloomington  and (b)
+knows a Student who lives in Chicago.}''
+
+\begin{description}
+\item[(a)]   Formulate this query in Pure SQL by only using the {\tt EXISTS} or {\tt NOT EXISTS} set predicates.
+You can not use the set operations {\tt INTERSECT}, {\tt UNION}, and {\tt EXCEPT}.
+
+A possible solution is
+{\footnotesize
+\begin{verbatim}
+select s.sid, s.sname
+from   Student s
+where  exists (select 1
+               from   worksFor w
+               where  s.sid = w.sid and
+                      exists (select 1
+                              from   companyLocation c
+                              where  w.cname = c.cname and c.city = 'Bloomington')) and
+       exists (select 1
+               from   Knows k
+               where  s.sid = k.sid1 and
+                      exists (select 1
+                              from   Student s2
+                              where  k.sid2 = s2.sid and
+                                     s2.city = 'Chicago'));
+\end{verbatim}
+}
+
+\item[(b)]   Formulate this query in Pure SQL by only using the {\tt  IN}, {\tt NOT IN}, {\tt SOME}, or {\tt ALL} set membership predicates.
+You can not use the set operations {\tt INTERSECT}, {\tt UNION}, and {\tt EXCEPT}.
+
+A possible solution is
+{\footnotesize
+\begin{verbatim}
+select s.sid, s.sname
+from   Student s
+where  s.sid in (select w.sid
+                 from   worksFor w
+                 where  w.cname in (select c.cname
+                                    from   companyLocation c
+                                    where  c.city = 'Bloomington')) and
+       s.sid in (select k.sid1
+                 from   Knows k
+                 where  k.sid2 in (select s2.sid
+                                   from   Student s2
+                                   where  s2.city = 'Chicago'));
+\end{verbatim}
+}
+
+Another possible solution using the {\tt SOME} and {\tt IN} predicates
+{\footnotesize
+\begin{verbatim}
+select s.sid, s.sname
+from   Student s
+where  s.sid = some (select w.sid
+                     from   worksFor w
+                     where  w.cname = some (select c.cname
+                                            from   companyLocation c
+                                            where  c.city = 'Bloomington')) and
+       s.sid in (select k.sid1
+                 from   Knows k
+                 where  k.sid2 in (select s2.sid
+                                   from   Student s2
+                                   where  s2.city = 'Chicago'));
+\end{verbatim}
+}
+
+\item[(c)]   Formulate this query in Pure SQL by only using the set operations {\tt INTERSECT}, {\tt UNION}, and {\tt EXCEPT}.
+A possible solution is
+{\footnotesize
+\begin{verbatim}
+select s.sid, s.sname
+from   Student s, worksFor w, companyLocation c
+where  s.sid = w.sid and
+       w.cname = c.cname and
+       c.city = 'Bloomington'
+intersect
+select s1.sid, s1.sname
+from   Student s1, Knows k, Student s2
+where  k.sid1 = s1.sid and
+       k.sid2 = s2.sid and
+       s2.city = 'Chicago';
+\end{verbatim}}
+
+\end{description}
+\end{example}
+
+\newpage
+We now turn to the problems for this section.
+\begin{enumerate}[resume]
+\item\label{queryTwo}   
+Consider the query ``\emph{Find each triple (c, s, sl) where c is the cname of a company, s is the sid of a student who earns the lowest salary at that company and knows at least someone who has Operating Systems skill, and sl is the salary of s}."
+
+\begin{enumerate}
+\item  \bluebullet\ Formulate this query in Pure SQL by only using the {\tt EXISTS} or {\tt NOT EXISTS} set predicates. (4.5 points)
+
+\item \bluebullet\ Formulate this query in Pure SQL by only using the {\tt  IN}, {\tt NOT IN}, {\tt SOME}, or {\tt ALL} set membership predicates. (4.5 points)
+
+\item  \bluebullet\  Formulate this query in Pure SQL by only using the set operations {\tt INTERSECT}, {\tt UNION}, and {\tt EXCEPT}. (4.5 points)
+
+\end{enumerate}
+
+\item\label{queryThree}  Consider the query ``\emph{Find the name, salary and city of each student who 
+(a) lives in a city where no one has the Networks skill and 
+(b) earns the highest salary in his/her company}."
+
+
+\begin{enumerate}
+\item  \bluebullet\  Formulate this query in Pure SQL by only using the {\tt EXISTS} or {\tt NOT EXISTS} set predicates.
+You can not use the set operations {\tt INTERSECT}, {\tt UNION}, and {\tt EXCEPT}. (4.5 points)
+
+\item  \bluebullet\  Formulate this query in Pure SQL by only using the {\tt  IN}, {\tt NOT IN}, {\tt SOME}, or {\tt ALL} set membership predicates. 
+You can not use the set operations {\tt INTERSECT}, {\tt UNION}, and {\tt EXCEPT}. (4.5 points)
+
+\item    \bluebullet\  Formulate this query in Pure SQL by only using the set operations {\tt INTERSECT}, {\tt UNION}, and {\tt EXCEPT}. (4.5 points)
+
+\end{enumerate}
+
+
+\item \label{queryFour} 
+Consider the query ``\emph{Find each pair $(c1,c2)$ of cnames of different companies such that
+no employee of c1 and no employee of c2 live in Chicago}.
+\begin{enumerate}
+\item  \bluebullet\   Formulate this query in Pure SQL by only using the {\tt EXISTS} or {\tt NOT EXISTS} set predicates.
+You can not use the set operations {\tt INTERSECT}, {\tt UNION}, and {\tt EXCEPT}. (4.5 points)
+
+\item  \bluebullet\ Formulate this query in Pure SQL by only using the {\tt  IN}, {\tt NOT IN}, {\tt SOME}, or {\tt ALL} set membership predicates.
+You can not use the set operations {\tt INTERSECT}, {\tt UNION}, and {\tt EXCEPT}. (4.5 points)
+
+\item  \bluebullet\   Formulate this query in Pure SQL by only using the set operations {\tt INTERSECT}, {\tt UNION}, and {\tt EXCEPT}. (4.5 points)
+
+\end{enumerate}
+\end{enumerate}
+
+\newpage
+
+\section{Formulating queries in Relational Algebra and RA SQL}
+
+Reconsider the queries in Section~\ref{PureSQL}.   The goal of the problems in this section
+is to formulate these queries in Relational Algebra in standard notation and in RA SQL.  
+
+There are some further restrictions:
+\begin{itemize}
+\item You can only use {\tt WHERE} clauses that use 
+conditions involving constants.   For example conditions of the form ``$t.A\, \theta\, \text{'a'}$'' are allowed, but conditions of the 
+form '$t.A\, \theta\, s.B$' are not allowed.   The latter conditions can be absorbed in {\tt JOIN} operations in the {\tt FROM} clause. (4.5 points)
+\item You can not use commas in any {\tt FROM} clause.  Rather, you should use {\tt JOIN} operations. (4.5 points)
+\end{itemize}
+
+You can use the following letters, or indexed letters, to denote relation names in RA expressions:
+
+\begin{center}
+\fbox{
+\begin{tabular}{l|l}
+$S$, $S_1$, $S_2, \cdots$ & {\tt Student} \\
+$C$, $C_1$, $C_2, \cdots$ & {\tt Company} \\
+$S$, $S_1$, $S_2, \cdots$ & {\tt Skill} \\
+$W$, $W_1$, $W_2, \cdots$ & {\tt worksFor} \\
+$cL$, $cL_1$, $cL_2, \cdots$ & {\tt companyLocation} \\
+$sS$, $sS_1$, $sS_2, \cdots$ & {\tt StudentSkill} \\
+$M$, $M_1$, $M_2, \cdots$ & {\tt hasManager} \\
+$K$, $K_1$, $K_2, \cdots$ & {\tt Knows} \\
+\end{tabular}
+}
+\end{center}
+
+To illustrate what you need to do reconsider the query in Example~\ref{PureSQLquery} in Section~\ref{PureSQL}.
+
+\begin{example}\label{RAquery}
+Consider the query ``\emph{Find the sid and name of each student who (a)
+works for a company located in Bloomington  and (b)
+knows a student who lives in Chicago}.''
+
+\begin{description}
+\item[(a)]  Formulate this query in Relational Algebra in standard notation.
+
+A possible solution is
+{\tiny
+\[
+\begin{array}{l}
+\pi_{sid,sname}(Student\bowtie worksFor \bowtie\, \pi_{cname}(\sigma_{city = \mathbf{Bloomington}}(companyLocation))) \cap\\
+\qquad 
+\pi_{Student_1.sid,Student_1.sname}(Student_1 \bowtie_{Student_1.sid = sid1} Knows \bowtie_{sid2 = Student_2.sid}\,\pi_{Student_2.sid}(\sigma_{city = \mathbf{Chicago}}(Student_2)))
+\end{array}
+\]
+}
+
+If we use the letters in the above box, this expression becomes more succinct:
+
+{\tiny
+\[
+\begin{array}{l}
+\pi_{sid,sname}(S\bowtie W \bowtie\, \pi_{cname}(\sigma_{city = \mathbf{Bloomington}}(cL))) \cap\\
+\qquad 
+\pi_{S_1.sid,S_1.sname}(S_1 \bowtie_{S_1.sid = sid1} K \bowtie_{sid2 = S_2.sid}\,\pi_{S_2.sid}(\sigma_{city = \mathbf{Chicago}}(S_2)))
+\end{array}
+\]
+}
+
+You are also allowed to introduce letters that denote expressions.  For example, let $E$ and $F$ denote the expression
+\[ \pi_{sid,sname}(S\bowtie W \bowtie\, \pi_{cname}(\sigma_{city = \mathbf{Bloomington}}(cL)))\]
+and
+\[\pi_{S_1.sid,S_1.sname}(S_1 \bowtie_{S_1.sid = sid1} K \bowtie_{sid2 = S_2.sid}\,\pi_{S_2.sid}(\sigma_{city = \mathbf{Chicago}}(S_2))),\]
+respectively. Then we can write the solution as follows:
+\[E\cap F.\]
+
+\item[(b)]  Formulate this query in RA SQL.   
+
+A possible solution is
+{\footnotesize
+\begin{verbatim}
+select sid, sname
+from   Student
+       NATURAL JOIN worksFor
+       NATURAL JOIN (select cname 
+                     from   companyLocation
+                     where  city = 'Bloomington') C
+INTERSECT
+select S1.sid, S1.sname
+from   Student S1 
+       JOIN Knows ON (S1.sid = sid1)
+       JOIN (select sid
+             from   Student
+             where  city = 'Chicago') S2 ON (sid2 = S2.sid)
+order by 1,2;
+\end{verbatim}
+}                    
+
+Observe that the {\tt WHERE} clauses only use conditions involving constants.
+
+\end{description}
+\end{example}
+
+\newpage
+
+We now turn to the problems in this section.
+\begin{enumerate}[resume]
+\item Reconsider Problem~\ref{queryTwo}.
+Find each triple (c, s, sal) where c is the cname of a company, s is the sid of a student who earns the lowest salary at that company and knows at least someone who has Operating Systems skill, and sal is the salary of s.
+\begin{enumerate}
+\item  \redbullet\  Formulate this query in Relational Algebra in standard notation. (4.5 points)
+
+\item \bluebullet\  Formulate this query in RA SQL. (3 points)
+\end{enumerate}
+
+
+
+\item Reconsider Problem~\ref{queryThree}.
+Find the name, salary and city of each student who 
+(a) lives in a city where no one has the Networks skill and 
+(b) earns the highest salary in his/her company.
+
+\begin{enumerate}
+\item  \redbullet\ Formulate this query in Relational Algebra in standard notation. (4.5 points)
+
+
+\item   \bluebullet\ Formulate this query in RA SQL. (3 points)
+
+\end{enumerate}
+\item Reconsider Problem~\ref{queryFour}.  Find each pair $(c1,c2)$ of cnames of different companies such that
+no employee of c1 and no employee of c2 live in Chicago.
+\begin{enumerate}
+\item  \redbullet\ Formulate this query in Relational Algebra in standard notation. (4.5 points)
+
+
+\item   \bluebullet\ 
+Formulate this query in RA SQL. (3 points)
+\end{enumerate}
+
+\end{enumerate}
+
+\newpage
+\section{Formulating constraints using Relational Algebra}
+
+Recall that it is possible to express constraints in TRC and as boolean SQL queries.
+It is also possible to write constraints using RA expressions.
+Let $E$, $F$, and $G$  denote RA expressions. Then we can write RA expression comparisons that express constraints:
+\begin{center}
+\begin{tabular}{llll}
+$E \not=\emptyset$ & which is true if $E$ evaluates to an \blue{non-empty} relation \\
+$E = \emptyset$ & which is true if $E$ evaluates to the \blue{empty} relation \\
+$F \subseteq G$ & which is true if $F$ evaluates to a relation \\
+&that is a \blue{subset} of the relation obtained from $G$\\ 
+$F \not\subseteq G$ & which is true if $F$ evaluates to a relation \\
+&that is \blue{not} a \blue{subset} of the relation obtained from $G$\\ 
+\end{tabular}
+\end{center}
+
+Here are some examples of writing constraints in this manner.
+
+\begin{example}\label{constraintOne}
+``\emph{Some student works for Google}.''  This constraint can be written as follows:
+\[\pi_{sid}(\sigma_{cname = \mathbf{Google}}(worksFor)) \neq \emptyset.
+\]
+Indeed,  the RA expression \[\pi_{sid}(\sigma_{cname = \mathbf{Google}}(worksFor))\]
+computes the set of all student sids who work for Google.   If this set is not empty then there
+are indeed students who work for Google.
+
+Incidentally, the constraint ``\emph{No one works for Google}'' can be written as follows:
+\[\pi_{sid}(\sigma_{cname = \mathbf{Google}}(worksFor)) = \emptyset.
+\]
+\end{example}
+
+\begin{example}\label{constraintTwo}
+\emph{Each student has at least two skills}.   This constraint can be written as follows:
+\[\pi_{sid}(S) \subseteq \pi_{sS_1.sid}(\sigma_{sS_1.skill \neq sS_2.skill}(sS_1\bowtie_{sS_1.sid = sS_2.sid} sS_2)).
+\]
+Indeed, \[\pi_{sid}(S)\] computes the set of all student sids and
+\[\pi_{sS_1.sid}(\sigma_{sS_1.skill \neq sS_2.skill}(sS_1\bowtie_{sS_1.sid = sS_2.sid} sS_2))\] computes the set of
+all sids of students who have at least two skills.    When the first set is contained in the second we must have that each student has at least two skills.
+
+Incidentally, the constraint ``\emph{Some student has fewer than two skills}" can be written as follows:
+\[\pi_{sid}(S) \not\subseteq \pi_{sS_1.sid}(\sigma_{sS_1.skill \neq sS_2.skill}(sS_1\bowtie_{sS_1.sid = sS_2.sid} sS_2)).
+\]
+
+\end{example}
+
+We now turn to the problems in this section.
+
+Formulate each of the following constraints using RA expressions as illustrated in Example~\ref{constraintOne} and
+Example~\ref{constraintTwo}.
+
+\begin{enumerate}[resume]
+
+
+\item \redbullet\ Each manager knows all of his/her students. 
+
+\item \redbullet\ No student who works at Amazon knows at-most 2 people. 
+
+\item \redbullet\ Some student who works for a company headquartered at   \\ Cupertino has a salary less than student with no skills.  \\(Assumption: Only 1 student with no skills) 
+
+\end{enumerate}
+
+
+
+
+\newpage
+
+\section{Formulating queries in SQL using views}
+
+
+Formulate the following views and queries in SQL. You are allowed to combine the features of both Pure SQL and RA SQL.
+
+\begin{enumerate}[resume]
+
+\item  \label{viewtriangle} \bluebullet\ 
+Create a materialized view {\tt CompanyKnownStudent} such that, for each company, the view returns the {\tt sid} of Student who are known by at least two different student (other than pid) from the same company and the {\tt sid} earns more salary than them. (6 points)
+
+
+Then test your view. 
+
+\item \bluebullet\ 	Create a parameterized view {\tt SkillOnlyOneStudent (skill1 text)} that returns pair of different Students sid1, sid2 such that {\tt sid1} should have the skill identified by {\tt skill1} and {\tt sid2} should not have the skill identified by {\tt skill1}. 
+Note that {\tt sid2} should have at least one skill. (6 points)
+
+Test your view for skill1 = ‘WebDevelopment’. 
+
+\item \bluebullet\  Let $PC(parent: integer, child: integer)$ be a rooted parent-child tree.   So a pair $(n,m)$ in $PC$ indicates that node $n$ is a parent of node $m$.
+The {\tt sameGeneration(n1, n2)} binary relation is inductively defined using the following two rules:
+\begin{itemize}
+\item If $n$ is a node in $PC$, then the pair $(n,n)$ is in the {\tt sameGeneration} relation. ({\bf Base rule})
+\item If $n_1$ is the parent of $m_1$ in $PC$ and $n_2$ is the parent of $m_2$ in $Tree$ and 
+$(n_1,n_2)$ is a pair in the {\tt sameGeneration} relation then $(m_1,m_2)$ is a pair in the {\tt sameGeneration} relation. ({\bf Inductive Rule})
+\end{itemize}
+
+Write a \blue{recursive view} for the {\tt sameGeneration} relation. (7 points) 
+
+Test your view. 
+\end{enumerate}
+
+
+\end{document}
+
+
+
+
+

@@ -1,0 +1,202 @@
+1. # INSERT INTO STUDENT VALUES (1013, 'Jake', 'Chicago');
+ERROR:  duplicate key value violates unique constraint "student_pkey"
+DETAIL:  Key (sid)=(1013) already exists.
+
+DELETE FROM STUDENT WHERE sid = 1013;
+ERROR:  update or delete on table "student" violates foreign key constraint "employedby_sid_fkey" on table "employedby"
+DETAIL:  Key (sid)=(1013) is still referenced from table "employedby".
+
+NSERT INTO employedBy VALUES (1013, 'CS', 50000);
+ERROR:  duplicate key value violates unique constraint "employedby_pkey"
+DETAIL:  Key (sid)=(1013) already exists.
+
+DELETE FROM Department WHERE deptName = 'CS';
+ERROR:  update or delete on table "department" violates foreign key constraint "employedby_deptname_fkey" on table "employedby"
+DETAIL:  Key (deptname)=(CS) is still referenced from table "employedby".
+
+2. select w.deptName, w.salary
+from   employedBy w
+where  w.salary >= all (select w1.salary
+                        from   employedBy w1
+                        where  w1.deptName = w.deptName)
+order by 1;
+
+3. 
+select s.sid, s.sname
+from   Student s
+where  exists (select 1
+               from   employedBy w
+               where  w.sid = s.sid and
+                      exists (select 1
+                              from   employedBy  w1
+                              where  w1.deptName = w.deptName and
+                                     exists (select 1
+                                             from   hasFriend f
+                                             where  f.sid1 = w.sid and
+                                                    f.sid2 = w1.sid) and
+                      w.salary > all (select w1.salary
+                                      from   employedBy w1
+                                      where  (w.sid, w1.sid) in (select f.sid1, f.sid2
+                                                                 from   hasFriend f) and
+                                             w1.deptName = w.deptName)))
+order by 1;
+
+4. select d.deptName
+from   Department d
+where  exists (select w.sid
+               from   employedBy w
+               where  w.deptName = d.deptName and
+                      w.sid not in  (select s.sid
+                                     from   student s
+                                     where  s.homeCity = 'Indianapolis'));
+
+5. 
+select s.sid, s.sname
+from   Student s
+where  s.homeCity = 'Bloomington' and
+       s.sid in (select  w.sid
+                 from    employedBy w
+                 where   w.salary > 20000) and
+       exists (select 1
+               from   hasFriend f
+               where  f.sid1 = s.sid) 
+order by 1,2;
+ 
+6.
+select d1.deptName, d2.deptName
+from   Department d1, Department d2
+where  d1.deptName <> d2.deptName and
+       d1.mainOffice = d2.mainOffice 
+order by 1,2;
+ 
+7.
+select s.sid, s.sname
+from   Student s
+where  exists (select 1
+               from   hasFriend f
+               where  f.sid1 =  s.sid) and
+       s.homeCity not in (select f.homeCity
+                      from   Student f
+                      where  (s.sid, f.sid) in (select f.sid1, f.sid2
+                                                from   hasFriend f))
+order by  1;
+ 
+8.
+select m.major
+from   Major m
+except
+select m.major
+from   Major m
+where  exists (select 1
+               from   studentMajor sm1, 
+                      studentMajor sm2, 
+                      studentMajor sm3
+               where  sm1.major = m.major and 
+                      sm2.major = m.major and
+                      sm3.major = m.major and
+                      sm1.sid <> sm2.sid and 
+                      sm2.sid <> sm3.sid and 
+                      sm1.sid <> sm3.sid)
+order by 1;
+
+9. select  s.sid, s.sname, w.salary
+from    Student s, employedBy w
+where   s.sid = w.sid and
+        exists (select 1
+                from   hasFriend hf1, hasFriend hf2
+                where  hf1.sid1 = s.sid and
+                       hf2.sid1 = s.sid and
+                       hf1.sid2 <> hf2.sid2 and
+                       (hf1.sid2, hf2.sid2) in (select sm1.sid, sm2.sid
+                                                from   studentMajor sm1, studentMajor sm2
+                                                where  sm1.major = sm2.major and sm1.major <> 'Mathematics'))
+order by 1;
+
+10. select s1.sid, s1.sname
+from Student s1
+where exists (select 1
+from Department d, employedBy w
+where d.deptName = w.deptName and
+s1.sid = w.sid and
+d.mainOffice = ’LuddyHall’ and
+exists (select 1
+from Student s2
+where (s1.sid, s2.sid) in (select * from hasFriend) and
+s2.homeCity <> ’Bloomington’));
+
+11. select s1.sid
+from Student s1
+where true = all (select true = some (select sm1.sid = s1.sid and
+sm2.sid = s2.sid and
+sm1.major = sm2.major and
+sm1.sid <> sm2.sid
+from studentMajor sm1, studentMajor sm2)
+from Student s2
+where (s1.sid, s2.sid) in (select * from hasFriend));
+
+12. select s1.sid as "sid1", s2.sid as "sid2"
+from Student s1, Student s2
+where s1.sid <> s2.sid and
+true = all (select true = some (select f2.sid1 = s2.sid and f1.sid2 = f2.sid2
+from hasFriend f2)
+from hasFriend f1
+where s1.sid = f1.sid1);
+
+13. 
+select m.major
+from   Major m
+where  not exists (select 1
+                   from   Student s, studentMajor sm
+                   where  s.sid = sm.sid and 
+                          sm.major = m.major and 
+                          s.homeCity = 'Bloomington')
+order by 1;
+
+
+
+Problem 18.b
+---------------------
+ t
+ 
+ Problem 19.b 
+---------------------
+ f
+ 
+ Problem 20.b
+--------------------
+ f
+ 
+ 18. Consider the constraint “Some major has fewer than 2 students with that major.” 
+
+    (b) Formulate this constraint as a boolean SQL query. 
+    select true = some (select true = all (select s1.sid = s2.sid
+                                       from  Student s1, Student s2
+                                       where (s1.sid, m.major) in (select * from studentMajor) and
+                                             (s2.sid, m.major) in (select * from studentMajor))
+                    from Major m);
+
+
+19. Consider the constraint “Each student is employed by a department and has at least two majors.” 
+
+        
+    (b)  Formulate this constraint as a boolean SQL query. 
+    select not exists (select 1
+                   from   Student s
+                   where  not(exists (select 1
+                                      from   employedBy w
+                                      where  w.sid = s.sid)
+                              and
+                              not exists (select 1
+                                          from   studentMajor sm1, studentMajor sm2
+                                          where  sm1.sid = s.sid and sm2.sid = s.sid and
+                                                 sm1.major <> sm2.major)));
+
+20. Consider the constraint “Each student and his or her friends work for the same department.” 
+
+    
+    (b)  Formulate this constraint as a boolean SQL query. 
+    select not exists (select 1
+                    from   hasFriend f, employedBy wf1, employedBy wf2
+                    where  f.sid1 = wf1.sid and
+                            f.sid2 = wf2.sid and
+                            wf1.deptName <> wf2.deptName);

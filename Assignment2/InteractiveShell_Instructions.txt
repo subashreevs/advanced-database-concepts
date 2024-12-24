@@ -1,0 +1,36 @@
+Step 1: Open Command Prompt
+
+    Press Windows + R: Open the Run dialog.
+    Type cmd and Hit Enter: This opens the Command Prompt.
+
+Step 2: Start PostgreSQL Interactive Shell
+
+    In the Command Prompt, type the following command and press Enter:
+
+    bash
+
+    command: psql -U your_username
+
+    Replace your_username with your PostgreSQL username.
+
+Step 3: Enter Password
+
+    You will be prompted to enter your PostgreSQL password. Type it in and press Enter.
+
+Step 4: Run the SQL Script
+
+    Once you are in the PostgreSQL interactive shell, run the following command to execute your script:
+
+    command: \i 'C:\path\to\your\assignment2_setup.sql'
+
+    Replace C:\path\to\your\ with the actual path where your SQL file is saved.
+
+Step 5: Verify Execution
+
+    Check the interactive shell for any messages or errors to confirm that the script executed successfully.
+
+Step 6: Exit the Interactive Shell
+
+    To exit the PostgreSQL interactive shell, type:
+
+    command:\q

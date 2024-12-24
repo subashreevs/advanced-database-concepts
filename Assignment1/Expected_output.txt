@@ -1,0 +1,157 @@
+Problem 2
+  deptname   | salary 
+-------------+--------
+ Biology     |  50000
+ CS          |  65000
+ DataScience |  60000
+ Mathematics |  70000
+ Physics     |  60000
+(5 rows)
+
+Problem 3
+ sid  | sname 
+------+-------
+ 1001 | Jean
+ 1010 | Linda
+ 1013 | Lisa
+ 1017 | Latha
+(4 rows)
+
+Problem 4
+  deptname   
+-------------
+ CS
+ DataScience
+ Mathematics
+ Physics
+ Biology
+(5 rows)
+
+Problem 5
+ sid  | sname 
+------+-------
+ 1008 | Emma
+ 1009 | Hasan
+ 1014 | Deepa
+ 1018 | Arif
+(4 rows)
+
+Problem 6
+  deptname   |  deptname   
+-------------+-------------
+ Astronomy   | Physics
+ CS          | DataScience
+ DataScience | CS
+ Physics     | Astronomy
+(4 rows)
+
+Problem 7
+ sid  | sname 
+------+-------
+ 1005 | Megan
+ 1008 | Emma
+ 1009 | Hasan
+ 1010 | Linda
+ 1012 | Eric
+ 1013 | Lisa
+ 1014 | Deepa
+ 1017 | Latha
+ 1019 | John
+(9 rows)
+
+Problem 8
+  major  
+---------
+ Biology
+(1 row)
+
+Problem 9
+ sid  |  sname   | salary 
+------+----------+--------
+ 1001 | Jean     |  65000
+ 1002 | Vidya    |  45000
+ 1004 | Qin      |  55000
+ 1006 | Ryan     |  55000
+ 1007 | Danielle |  50000
+ 1008 | Emma     |  50000
+ 1009 | Hasan    |  60000
+ 1010 | Linda    |  55000
+ 1011 | Nick     |  70000
+ 1013 | Lisa     |  55000
+ 1014 | Deepa    |  50000
+ 1015 | Chris    |  60000
+ 1016 | YinYue   |  55000
+ 1017 | Latha    |  60000
+ 1018 | Arif     |  50000
+ 1019 | John     |  50000
+(16 rows)
+
+Problem 10
+ sid  | sname  
+------+--------
+ 1012 | Eric
+ 1014 | Deepa
+ 1018 | Arif
+ 1015 | Chris
+ 1006 | Ryan
+ 1001 | Jean
+ 1008 | Emma
+ 1003 | Anna
+ 1010 | Linda
+ 1002 | Vidya
+ 1004 | Qin
+ 1016 | YinYue
+ 1009 | Hasan
+(13 rows)
+
+Problem 11
+ sid  
+------
+ 1005
+ 1012
+ 1013
+ 1014
+ 1016
+ 1017
+(6 rows)
+
+Problem 12
+ sid1 | sid2 
+------+------
+ 1003 | 1006
+ 1003 | 1016
+ 1003 | 1018
+ 1005 | 1002
+ 1005 | 1008
+ 1005 | 1015
+ 1005 | 1016
+ 1012 | 1002
+ 1012 | 1011
+ 1012 | 1015
+ 1017 | 1004
+(11 rows)
+
+Problem 13
+  major  
+---------
+ Biology
+ CS
+(2 rows)
+
+Problem 18.b
+ ?column? 
+----------
+ t
+(1 row)
+
+Problem 19.b
+ ?column? 
+----------
+ f
+(1 row)
+
+Problem 20.b
+ ?column? 
+----------
+ f
+(1 row)
